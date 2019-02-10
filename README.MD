@@ -1,6 +1,6 @@
 # MTGA Analyzer
 
-Allows you to plug in your MTGA winrate and current rank and find out how many games on average it will take to get to the next tier (bronze, silver, gold, diamond, platinum, mythic).
+Allows you to plug in your MTGA winrate and current rank and find out how many games on average it will take to get to the next rank (bronze, silver, gold, diamond, platinum, mythic).
 
 ## Quickstart
 
