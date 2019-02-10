@@ -12,18 +12,18 @@ Allows you to plug in your MTGA winrate and current rank and find out how many g
 
 ```
 usage: analyze.py [-h] [--winrate WINRATE]
-                  [--tier {bronze,silver,gold,platinum,diamond}] [--rank RANK]
-                  [--subrank SUBRANK] [--runs RUNS]
+                  [--rank {bronze,silver,gold,platinum,diamond}] [--tier TIER]
+                  [--subtier SUBTIER] [--runs RUNS]
 
-Analyze games to rank up to the next tier in MTGA based on winrate.
+Analyze games to rank up to the next rank in MTGA based on winrate.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --winrate WINRATE     Your winrate at the current tier.
-  --tier {bronze,silver,gold,platinum,diamond}
-                        Current tier
-  --rank RANK           Your rank at the current tier.
-  --subrank SUBRANK     Your "blocks" on the meter at the current rank.
+  --winrate WINRATE     Your winrate at the current rank.
+  --rank {bronze,silver,gold,platinum,diamond}
+                        Current rank
+  --tier TIER           Your tier at the current rank.
+  --subtier SUBTIER     Your "blocks" on the meter at the current tier.
   --runs RUNS           Sim runs to execute. Increases execution time and
                         accuracy.
 ```
