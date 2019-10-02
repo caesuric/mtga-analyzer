@@ -2,11 +2,11 @@ import argparse
 import random
 
 subtiers_per_tier = {
-    'bronze': 4,
-    'silver': 5,
+    'bronze': 6,
+    'silver': 6,
     'gold': 6,
-    'platinum': 7,
-    'diamond': 7
+    'platinum': 6,
+    'diamond': 6
 }
 
 def main(winrate, rank, tier, subtier, num_games):
@@ -42,7 +42,7 @@ class Sim():
     
     def determine_progress(self, rank, tier, subtier):
         total_subtiers = 4 * subtiers_per_tier[rank]
-        return total_subtiers - 1 - (tier*subtiers_per_tier[rank]) + subtier
+        return total_subtiers - (tier*subtiers_per_tier[rank]) + subtier
     
     def determine_tier(self, rank, subtier):
         return int(subtier / subtiers_per_tier[rank])
