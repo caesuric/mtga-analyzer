@@ -1,6 +1,14 @@
 import argparse
 import random
 
+subtiers_per_tier = {
+    'bronze': 4,
+    'silver': 5,
+    'gold': 6,
+    'platinum': 7,
+    'diamond': 7
+}
+
 def main(winrate, rank, tier, subtier, num_games):
     show_rank(winrate, tier, rank, subtier)
     random.seed()
@@ -28,19 +36,16 @@ def get_next_rank(rank):
 class Sim():
     def __init__(self, winrate, rank, tier, subtier):
         self.winrate = winrate
-        self.subtier = self.determine_tier(rank, tier, subtier)
+        self.subtier = self.determine_progress(rank, tier, subtier)
         self.rank = rank
+        self.protected_games = 0
     
-    def determine_tier(self, rank, tier, subtier):
-        subtiers_per_tier = {
-            'bronze': 4,
-            'silver': 5,
-            'gold': 6,
-            'platinum': 7,
-            'diamond': 7
-        }
+    def determine_progress(self, rank, tier, subtier):
         total_subtiers = 4 * subtiers_per_tier[rank]
         return total_subtiers - 1 - (tier*subtiers_per_tier[rank]) + subtier
+    
+    def determine_tier(self, rank, subtier):
+        return int(subtier / subtiers_per_tier[rank])
     
     def run(self):
         games = 0
@@ -57,16 +62,28 @@ class Sim():
             self.process_loss()
         if self.subtier<0:
             self.subtier = 0
+        if self.protected_games>0:
+            self.protected_games -= 1
     
     def process_win(self):
+        if self.win_raises_tier():
+            self.protected_games = 4
         if self.rank in ['bronze', 'silver']:
             self.subtier += 2
         else:
             self.subtier += 1
     
     def process_loss(self):
+        if self.loss_drops_tier() and self.protected_games > 0:
+            return
         if self.rank!='bronze':
             self.subtier -= 1
+    
+    def win_raises_tier(self):
+        return (self.determine_tier(self.rank, self.subtier+1) > self.determine_tier(self.rank, self.subtier))
+
+    def loss_drops_tier(self):
+        return (self.determine_tier(self.rank, self.subtier-1) < self.determine_tier(self.rank, self.subtier))
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Analyze games to rank up to the next rank in MTGA based on winrate.')

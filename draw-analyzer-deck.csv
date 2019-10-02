@@ -1,0 +1,7 @@
+name,mana,count,makes_mana,cantrip,wincon,special
+Llanowar Elves,G,4,G,FALSE,-1,-1
+Opt,U,4,,TRUE,-1,-1
+Growth Spiral,UG,4,,TRUE,-1,0
+Incubation Druid,1G,4,*,FALSE,-1,-1
+Radical Idea,1U,4,,TRUE,-1,-1
+Revitalize,1W,3,,TRUE,-1,-1

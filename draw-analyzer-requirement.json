@@ -1,0 +1,40 @@
+{
+    "turn": 5,
+    "successfulOutcomes": [
+        {
+            "mana": "WUBRG",
+            "autoAdd": true,
+            "copiesOfNeededCard": 3
+        }
+    ],
+    "manaBase": [
+        {
+            "mana": "WU",
+            "copies": 4
+        },
+        {
+            "mana": "UG",
+            "copies": 6
+        },
+        {
+            "mana": "UB",
+            "copies": 2
+        },
+        {
+            "mana": "GR",
+            "copies": 2
+        },
+        {
+            "mana": "WB",
+            "copies": 1
+        },
+        {
+            "mana": "WR",
+            "copies": 1
+        },
+        {
+            "mana": "BR",
+            "copies": 2
+        }
+    ]
+}
