@@ -1,5 +1,6 @@
 import argparse
 import random
+from tabulate import tabulate
 
 subtiers_per_tier = {
     'bronze': 6,
@@ -9,19 +10,32 @@ subtiers_per_tier = {
     'diamond': 6
 }
 
-def main(winrate, rank, tier, subtier, num_games):
-    show_rank(winrate, tier, rank, subtier)
+def main(winrate, rank, tier, subtier, num_games, time):
+    show_rank(winrate, tier, rank, subtier, time)
     random.seed()
-    total = 0.0
-    for i in range(num_games):
-        sim = Sim(winrate, rank, tier, subtier)
-        total += sim.run()
-    total /= float(num_games)
-    print('Need to play {0} games on average to rank up to {1}'.format(total, get_next_rank(rank)))
+    all_total_time = 0.0
+    all_total_games = 0
+    table = []
+    while rank != 'mythic':
+        total_games = 0
+        for i in range(num_games):
+            sim = Sim(winrate, rank, tier, subtier)
+            total_games += sim.run()
+        all_total_games += total_games / float(num_games)
+        total_time = float(total_games / float(num_games)) * time / 60.0
+        all_total_time += total_time
+        sub_table = [get_next_rank(rank), all_total_games, all_total_time]
+        table.append(sub_table)
+        rank = get_next_rank(rank)
+        tier = 4
+        subtier = 0
+    print()
+    print(tabulate(table, headers=['To get to this rank', 'Games', 'Hours']))
 
-def show_rank(winrate, rank, tier, subtier):
+def show_rank(winrate, rank, tier, subtier, time):
     print('{0} tier {1}, with {2} bars'.format(rank, tier, subtier))
     print('Assuming {0}% winrate'.format(winrate*100.0))
+    print(f'Assuming {time} minute games')
 
 def get_next_rank(rank):
     results = {
@@ -92,5 +106,7 @@ if __name__=='__main__':
     parser.add_argument('--tier', type=int, help='Your tier at the current rank.', default=4)
     parser.add_argument('--subtier', type=int, help='Your "blocks" on the meter at the current tier.', default=0)
     parser.add_argument('--runs', type=int, help='Sim runs to execute. Increases execution time and accuracy.', default=10000)
+    parser.add_argument('--total-playtime', type=float, help='Total playtime, in minutes.', default=0.0)
+    parser.add_argument('--total-games', type=int, help='Total games played so far.', default=1)
     args = parser.parse_args()
-    main(args.winrate, args.rank, args.tier, args.subtier, args.runs)
+    main(args.winrate, args.rank, args.tier, args.subtier, args.runs, args.total_playtime/float(args.total_games))
