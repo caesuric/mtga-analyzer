@@ -1,8 +1,13 @@
 import json
 import random
 import os
+import sys
 import time
+import threading
 import hashlib
+import tkinter as tk
+import tkinter.font as tkfont
+from tkinter import ttk
 from tabulate import tabulate
 from pathlib import Path
 
@@ -25,26 +30,91 @@ def main():
     parse_logs(log_data, log_path, log_path2)
     time1 = get_time(str(log_path))
     time2 = get_time(str(log_path2))
-    while True:
-        time1, time2 = main_loop(time1, time2, log_path, log_path2, log_data)
-    
-def get_time(filename):
-    return os.stat(filename).st_mtime
+    app = create_main_window(log_data)
+    launch_main_loop(app, time1, time2, log_path, log_path2, log_data)
+    app.mainloop()
 
-def main_loop(time1, time2, filename1, filename2, log_data):
+def create_main_window(log_data):
+    root = tk.Tk()
+    root.overrideredirect(1)
+    root.attributes('-topmost', 'true')
+    app = Application(log_data, master=root)
+    return app
+
+def launch_main_loop(app, time1, time2, log_path, log_path2, log_data):
+    t = threading.Thread(target=main_loop, args=(app,time1,time2,log_path,log_path2,log_data))
+    t.start()
+
+def main_loop(app, time1, time2, log_path, log_path2, log_data):
+    while app.running:
+        time1, time2 = main_loop_iteration(app, time1, time2, log_path, log_path2, log_data)
+    sys.exit()
+
+def main_loop_iteration(app, time1, time2, filename1, filename2, log_data):
     new_time1 = get_time(str(filename1))
     new_time2 = get_time(str(filename2))
     if new_time1 != time1 or new_time2 != time2:
         parse_logs(log_data, filename1, filename2)
+        update_window_labels(log_data, app)
     time.sleep(1)
     return new_time1, new_time2
+
+def update_window_labels(log_data, app):
+    match_stats = get_match_stats(log_data)
+    game_time = match_stats['time'] / 60.0 / 60.0 / 10000000.0 / (match_stats['wins'] + match_stats['losses'])
+    table = run_sims(log_data.rank_detail, match_stats['win_percent'], game_time)
+    app.rank_text.config(text=f'At rank {log_data.rank_detail["rank"]}, tier {log_data.rank_detail["tier"]}, subtier {log_data.rank_detail["subtier"]}')
+    app.using_deck_text.config(text=f'Using deck {log_data.decks[match_stats["most_recent_deck"]]}')
+    app.win_percent_text.config(text=f'Win percent {match_stats["win_percent"] * 100}%')
+    app.played_time_text.config(text=f'Played this deck for {match_stats["time"] / 60 / 10000000} minutes')
+    app.table_text.config(text=tabulate(table, headers=['To get to this rank', 'Games', 'Hours']))
+
+class Application(tk.Frame):
+    def __init__(self, log_data, master=None):
+        super().__init__(master)
+        self.master = master
+        self.running = True
+        self.pack()
+        self.create_widgets(log_data)
+    
+    def create_widgets(self, log_data):
+        match_stats = get_match_stats(log_data)
+        game_time = match_stats['time'] / 60.0 / 60.0 / 10000000.0 / (match_stats['wins'] + match_stats['losses'])
+        table = run_sims(log_data.rank_detail, match_stats['win_percent'], game_time)
+        self.font = tkfont.Font(family='Courier', size=10)
+        self.rank_text = tk.Label(text=f'At rank {log_data.rank_detail["rank"]}, tier {log_data.rank_detail["tier"]}, subtier {log_data.rank_detail["subtier"]}', font=self.font)
+        self.rank_text.pack(side='top')
+        self.using_deck_text = tk.Label(text=f'Using deck {log_data.decks[match_stats["most_recent_deck"]]}', font=self.font)
+        self.using_deck_text.pack(side='top')
+        self.win_percent_text = tk.Label(text=f'Win percent {match_stats["win_percent"] * 100}%', font=self.font)
+        self.win_percent_text.pack(side='top')
+        self.played_time_text = tk.Label(text=f'Played this deck for {match_stats["time"] / 60 / 10000000} minutes', font=self.font)
+        self.played_time_text.pack(side='top')
+        self.separator = ttk.Separator(orient='horizontal')
+        self.separator.pack(side='top', fill='x')
+        self.table_text = tk.Label(text=tabulate(table, headers=['To get to this rank', 'Games', 'Hours']), font=self.font)
+        self.table_text.pack(side='top')
+        self.exit_button = tk.Button(text='Exit', command=self.exit)
+        self.exit_button.pack(side='top')
+    
+    def exit(self):
+        self.running = False
+        self.master.destroy()
+
+def get_time(filename):
+    return os.stat(filename).st_mtime
 
 def parse_logs(log_data, log_path, log_path2):
     load_log_data(log_data)
     log_data.parse_log(log_path)
     log_data.parse_log(log_path2)
     save_log_data(log_data)
-    show_results(log_data)
+    # show_results(log_data)
+    # match_stats = get_match_stats(log_data)
+    # game_time = match_stats['time'] / 60.0 / 60.0 / 10000000.0 / (match_stats['wins'] + match_stats['losses'])
+    # table = run_sims(log_data.rank_detail, match_stats['win_percent'], game_time)
+    # print()
+    # print(tabulate(table, headers=['To get to this rank', 'Games', 'Hours']))
 
 def load_log_data(log_data):
     if os.path.exists(log_path):
@@ -65,8 +135,6 @@ def show_results(log_data):
     print(f'Using deck {log_data.decks[match_stats["most_recent_deck"]]}')
     print(f'Win percent {match_stats["win_percent"] * 100}%')
     print(match_stats['time'] / 60 / 10000000, 'minutes')
-    game_time = match_stats['time'] / 60.0 / 60.0 / 10000000.0 / (match_stats['wins'] + match_stats['losses'])
-    run_sims(log_data.rank_detail, match_stats['win_percent'], game_time)
 
 def get_match_stats(log_data):
     output = {'wins': 0, 'losses': 0, 'time': 0, 'most_recent_deck': log_data.matches[-1]['deck']}
@@ -88,8 +156,7 @@ def run_sims(rank_detail, winrate, game_time):
     while rank_detail['rank'] != 'Mythic':
         total_time, game_count, table = run_sim_set(rank_detail['rank'], rank_detail['tier'], rank_detail['subtier'], winrate, game_time, total_time, game_count, table)
         rank_detail = {'rank': get_next_rank(rank_detail['rank']), 'tier': 4, 'subtier': 0}
-    print()
-    print(tabulate(table, headers=['To get to this rank', 'Games', 'Hours']))
+    return table
 
 def run_sim_set(rank, tier, subtier, winrate, game_time, total_time, game_count, table):
     game_count_subtotal = 0
