@@ -109,12 +109,6 @@ def parse_logs(log_data, log_path, log_path2):
     log_data.parse_log(log_path)
     log_data.parse_log(log_path2)
     save_log_data(log_data)
-    # show_results(log_data)
-    # match_stats = get_match_stats(log_data)
-    # game_time = match_stats['time'] / 60.0 / 60.0 / 10000000.0 / (match_stats['wins'] + match_stats['losses'])
-    # table = run_sims(log_data.rank_detail, match_stats['win_percent'], game_time)
-    # print()
-    # print(tabulate(table, headers=['To get to this rank', 'Games', 'Hours']))
 
 def load_log_data(log_data):
     if os.path.exists(log_path):
