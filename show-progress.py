@@ -217,8 +217,7 @@ class LogData():
         self.parsing_match = data['parsing_match']
     
     def handle_login(self, logfile, line):
-        self.player_name = line.replace(
-            '[Accounts - Client] Successfully logged in to account: ', '').strip()
+        self.player_name = line.replace('[Accounts - Client] Successfully logged in to account: ', '').strip()
     
     def handle_get_deck_list(self, logfile, line):
         self.deck_list_string = line
@@ -251,9 +250,8 @@ class LogData():
             self.current_match['id'] = match_game_obj['matchGameRoomStateChangedEvent']['gameRoomInfo']['gameRoomConfig']['matchId']
             if 'reservedPlayers' in match_game_obj['matchGameRoomStateChangedEvent']['gameRoomInfo']['gameRoomConfig']:
                 self.get_team_id(match_game_obj['matchGameRoomStateChangedEvent']['gameRoomInfo']['gameRoomConfig']['reservedPlayers'])
-        else:
-            if 'finalMatchResult' in match_game_obj['matchGameRoomStateChangedEvent']['gameRoomInfo']:
-                self.get_win_status(match_game_obj['matchGameRoomStateChangedEvent']['gameRoomInfo']['finalMatchResult']['resultList'])
+        if 'finalMatchResult' in match_game_obj['matchGameRoomStateChangedEvent']['gameRoomInfo']:
+            self.get_win_status(match_game_obj['matchGameRoomStateChangedEvent']['gameRoomInfo']['finalMatchResult']['resultList'])
     
     def get_team_id(self, reserved_players):
         for player in reserved_players:
@@ -283,8 +281,11 @@ class LogData():
     
     def match_already_parsed(self):
         for match in self.matches:
-            if match['id'] == self.current_match['id']:
+            if match['id'] == self.current_match['id'] and match['won'] is not None:
                 return True
+            elif match['id'] == self.current_match['id'] and match['won'] is None:
+                self.matches.remove(match)
+                return False
         return False
         
     def parse_log(self, log_path):
