@@ -65,8 +65,8 @@ def update_window_labels(log_data, app):
     table = run_sims(log_data.rank_detail, match_stats['win_percent'], game_time)
     app.rank_text.config(text=f'At rank {log_data.rank_detail["rank"]}, tier {log_data.rank_detail["tier"]}, subtier {log_data.rank_detail["subtier"]}')
     app.using_deck_text.config(text=f'Using deck {log_data.decks[match_stats["most_recent_deck"]]}')
-    app.win_percent_text.config(text=f'Win percent {match_stats["win_percent"] * 100}%')
-    app.played_time_text.config(text=f'Played this deck for {match_stats["time"] / 60 / 10000000} minutes')
+    app.win_percent_text.config(text=f'Win percent {match_stats["win_percent"] * 100:.2f}%')
+    app.played_time_text.config(text=f'Played this deck for {match_stats["time"] / 60 / 10000000:.2f} minutes')
     app.table_text.config(text=tabulate(table, headers=['To get to this rank', 'Games', 'Hours']))
 
 class Application(tk.Frame):
@@ -86,9 +86,9 @@ class Application(tk.Frame):
         self.rank_text.pack(side='top')
         self.using_deck_text = tk.Label(text=f'Using deck {log_data.decks[match_stats["most_recent_deck"]]}', font=self.font)
         self.using_deck_text.pack(side='top')
-        self.win_percent_text = tk.Label(text=f'Win percent {match_stats["win_percent"] * 100}%', font=self.font)
+        self.win_percent_text = tk.Label(text=f'Win percent {match_stats["win_percent"] * 100:.2f}%', font=self.font)
         self.win_percent_text.pack(side='top')
-        self.played_time_text = tk.Label(text=f'Played this deck for {match_stats["time"] / 60 / 10000000} minutes', font=self.font)
+        self.played_time_text = tk.Label(text=f'Played this deck for {match_stats["time"] / 60 / 10000000:.2f} minutes', font=self.font)
         self.played_time_text.pack(side='top')
         self.separator = ttk.Separator(orient='horizontal')
         self.separator.pack(side='top', fill='x')
