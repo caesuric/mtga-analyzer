@@ -355,7 +355,7 @@ class Sim():
     
     def run(self):
         games = 0
-        while self.subtier<23:
+        while self.subtier<24:
             self.run_game()
             games += 1
         return games
@@ -373,7 +373,9 @@ class Sim():
     
     def process_win(self):
         if self.win_raises_tier():
-            self.protected_games = 4
+            self.protected_games = 3
+        else:
+            self.protected_games = 0
         if self.rank in ['Bronze', 'Silver']:
             self.subtier += 2
         else:
