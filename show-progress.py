@@ -376,7 +376,7 @@ class Sim():
             self.protected_games = 3
         else:
             self.protected_games = 0
-        if self.rank in ['Bronze', 'Silver']:
+        if self.rank in ['Bronze', 'Silver', 'Gold']:
             self.subtier += 2
         else:
             self.subtier += 1
