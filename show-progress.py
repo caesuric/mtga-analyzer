@@ -236,7 +236,7 @@ class LogData():
     def handle_deck_submit(self, logfile, line):
         deck_selected_obj = json.loads(line.replace('[UnityCrossThreadLogger]<== Event.DeckSubmitV3 ', '').strip())
         event = deck_selected_obj['payload']
-        if event['InternalEventName'] == 'Ladder' and event['ModuleInstanceData']['DeckSelected']:
+        if event['InternalEventName'] in ['Ladder', 'Historic_Ladder'] and event['ModuleInstanceData']['DeckSelected']:
             self.selected_deck = event['CourseDeck']['id']
 
     def handle_match_created(self, logfile, line):
@@ -293,7 +293,7 @@ class LogData():
         self.set_parse_variables()
     
     def read_log_file(self, log_path):
-        with log_path.open() as logfile:
+        with log_path.open(encoding='utf-8') as logfile:
             line = logfile.readline()
             while line:
                 for key in self.handler_table:
@@ -354,6 +354,8 @@ class Sim():
         return int(subtier / subtiers_per_tier[rank])
     
     def run(self):
+        if self.winrate == 0:
+            return 1000000000
         games = 0
         while self.subtier<24:
             self.run_game()
