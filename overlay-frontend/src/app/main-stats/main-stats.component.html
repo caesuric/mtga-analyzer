@@ -1,0 +1,35 @@
+<div *ngIf="data === null">
+    Stats not yet loaded.
+</div>
+<div *ngIf="!!data">
+    <div>
+        At rank {{data.rank}}, tier {{data.tier}}, subtier {{data.subtier}}
+    </div>
+    <div>
+        Using deck {{data.deck}}
+    </div>
+    <div>
+        Win percent {{formatNumber(data.winPercent * 100)}}%
+    </div>
+    <div>
+        Played this deck for {{formatNumber(data.deckTimePlayed)}} minutes
+    </div>
+    <div class="sim-table">
+        <div class="sim-header sim-row">
+            <div class="sim-column">
+                To Rank
+            </div>
+            <div class="sim-column">
+                Games
+            </div>
+            <div class="sim-column">
+                Hours
+            </div>
+        </div>
+        <div *ngFor="let row of data.simTable" class="sim-row">
+            <div class="sim-column" [innerHtml]="row[0]"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(row[1])"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(row[2])"></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,25 @@
+.sim-table {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+
+    >.sim-row {
+        display: flex;
+        flex-direction: row;
+        flex: 0;
+        border-bottom: 2px solid #2b2424;
+
+        &.sim-header {
+            font-weight: bold;
+            background-color: #5bb9c0;
+            color: #373737;
+            border-bottom: 4px solid #2b2424;
+        }
+
+        >.sim-column {
+            flex: 1;
+            border-right: 2px solid #2b2424;
+            padding-left: 10px;
+        }
+    }
+}

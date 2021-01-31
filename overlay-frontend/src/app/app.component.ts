@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { CommsService } from './comms.service';
 
 @Component({
   selector: 'app-root',
@@ -9,5 +8,5 @@ import { CommsService } from './comms.service';
 export class AppComponent {
   title = 'overlay-frontend';
 
-  constructor(private comms: CommsService) {}
+  constructor() {}
 }

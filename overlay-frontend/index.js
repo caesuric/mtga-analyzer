@@ -14,7 +14,7 @@ const createWindow = () => {
     x: 0,
     y: 0,
     width: 400,
-    height: 300,
+    height: 250,
     frame: false,
     resizable: false
   });
