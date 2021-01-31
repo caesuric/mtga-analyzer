@@ -105,10 +105,15 @@ def get_time(filename):
     return os.stat(filename).st_mtime
 
 def parse_logs(log_data, log_path, log_path2):
+    ensure_data_directory()
     load_log_data(log_data)
     log_data.parse_log(log_path)
     log_data.parse_log(log_path2)
     save_log_data(log_data)
+
+def ensure_data_directory():
+    if not os.path.exists('data'):
+        os.mkdir('data')
 
 def load_log_data(log_data):
     if os.path.exists(log_path):
@@ -156,7 +161,11 @@ def run_sim_set(rank, tier, subtier, winrate, game_time, total_time, game_count,
     game_count_subtotal = 0
     for i in range(num_sim_games):
         sim = Sim(winrate, rank, tier, subtier)
-        game_count_subtotal += sim.run()
+        games_to_rank_up = sim.run()
+        if games_to_rank_up == 1000000:
+            game_count_subtotal = 1000000 * num_sim_games
+            break
+        game_count_subtotal += games_to_rank_up
     game_count += game_count_subtotal / float(num_sim_games)
     time_subtotal = float(game_count_subtotal / float(num_sim_games)) * game_time
     total_time += time_subtotal
@@ -355,11 +364,13 @@ class Sim():
     
     def run(self):
         if self.winrate == 0:
-            return 1000000000
+            return 1000000
         games = 0
         while self.subtier<24:
             self.run_game()
             games += 1
+            if games >= 1000000:
+                return 1000000
         return games
     
     def run_game(self):
