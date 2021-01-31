@@ -5,6 +5,9 @@ import sys
 import time
 import threading
 import hashlib
+import tornado.websocket
+import tornado.web
+import tornado.ioloop
 import tkinter as tk
 import tkinter.font as tkfont
 from tkinter import ttk
@@ -30,9 +33,17 @@ def main():
     parse_logs(log_data, log_path, log_path2)
     time1 = get_time(str(log_path))
     time2 = get_time(str(log_path2))
-    app = create_main_window(log_data)
-    launch_main_loop(app, time1, time2, log_path, log_path2, log_data)
-    app.mainloop()
+    # app = create_main_window(log_data)
+    launch_main_loop(time1, time2, log_path, log_path2, log_data)
+    # app.mainloop()
+    run_server()
+
+def run_server():
+    application = tornado.web.Application([
+        (r"/socket", SocketHandler)
+    ])
+    application.listen(19019)
+    tornado.ioloop.IOLoop.current().start()
 
 def create_main_window(log_data):
     root = tk.Tk()
@@ -41,23 +52,43 @@ def create_main_window(log_data):
     app = Application(log_data, master=root)
     return app
 
-def launch_main_loop(app, time1, time2, log_path, log_path2, log_data):
-    t = threading.Thread(target=main_loop, args=(app,time1,time2,log_path,log_path2,log_data))
+def launch_main_loop(time1, time2, log_path, log_path2, log_data):
+    t = threading.Thread(target=main_loop, args=(time1,time2,log_path,log_path2,log_data))
     t.start()
 
-def main_loop(app, time1, time2, log_path, log_path2, log_data):
-    while app.running:
-        time1, time2 = main_loop_iteration(app, time1, time2, log_path, log_path2, log_data)
+def main_loop(time1, time2, log_path, log_path2, log_data):
+    while True: # app.running:
+        time1, time2 = main_loop_iteration(time1, time2, log_path, log_path2, log_data)
     sys.exit()
 
-def main_loop_iteration(app, time1, time2, filename1, filename2, log_data):
+def main_loop_iteration(time1, time2, filename1, filename2, log_data):
     new_time1 = get_time(str(filename1))
     new_time2 = get_time(str(filename2))
     if new_time1 != time1 or new_time2 != time2:
         parse_logs(log_data, filename1, filename2)
-        update_window_labels(log_data, app)
+        update_frontend(log_data)
+        # update_window_labels(log_data, app)
     time.sleep(1)
     return new_time1, new_time2
+
+def update_frontend(log_data):
+    match_stats = get_match_stats(log_data)
+    game_time = match_stats['time'] / 60.0 / 60.0 / 10000000.0 / (match_stats['wins'] + match_stats['losses'])
+    table = run_sims(log_data.rank_detail, match_stats['win_percent'], game_time)
+    SocketHandler.io_loop.add_callback(
+        lambda: SocketHandler.instance.send_message({
+            'message': 'statsUpdate',
+            'data': {
+                'rank': log_data.rank_detail['rank'],
+                'tier': log_data.rank_detail['tier'],
+                'subtier': log_data.rank_detail['subtier'],
+                'deck': log_data.decks[match_stats['most_recent_deck']],
+                'winPercent': match_stats['win_percent'],
+                'deckTimePlayed': match_stats['time'] / 60 / 10000000,
+                'simTable': table
+            }
+        })
+    )
 
 def update_window_labels(log_data, app):
     match_stats = get_match_stats(log_data)
@@ -405,6 +436,27 @@ class Sim():
 
     def loss_drops_tier(self):
         return (self.determine_tier(self.rank, self.subtier-1) < self.determine_tier(self.rank, self.subtier))
+
+class SocketHandler(tornado.websocket.WebSocketHandler):
+    instance = None
+    io_loop = None
+
+    def check_origin(self, origin):
+        return True
+
+    def open(self):
+        SocketHandler.instance = self
+        SocketHandler.io_loop = tornado.ioloop.IOLoop.current()
+
+    def on_message(self, message):
+        parsed = tornado.escape.json_decode(message)
+
+    def send_message(self, message):
+        try:
+            self.write_message(message)
+        except Exception as e:
+            print(e)
+
 
 if __name__=='__main__':
     main()
