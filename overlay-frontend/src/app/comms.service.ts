@@ -28,9 +28,9 @@ export class CommsService {
   onClose(event: any) {
     setTimeout(() => {
       this.socket = new WebSocket('ws://localhost:19019/socket')
-      this.socket.onmessage = this.onMessage;
-      this.socket.onopen = this.onOpen;
-      this.socket.onclose = this.onClose;
+      this.socket.onmessage = (event: any) => this.onMessage(event);
+      this.socket.onopen = (event: any) => this.onOpen(event);
+      this.socket.onclose = (event: any) => this.onClose(event);
     }, 200);
   }
 }

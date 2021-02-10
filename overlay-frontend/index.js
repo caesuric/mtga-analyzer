@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const child_process = require('child_process');
+let childProcessStarted = false;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -8,13 +9,14 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 }
 
 const createWindow = () => {
-  child_process.exec(path.join('dist', 'overlay-backend.exe'));
+  if (!childProcessStarted) child_process.exec(path.join('dist', 'overlay-backend.exe'));
+  childProcessStarted = true;
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     x: 0,
     y: 0,
     width: 400,
-    height: 250,
+    height: 350,
     frame: false,
     resizable: false
   });
@@ -47,7 +49,7 @@ app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    // createWindow();
   }
 });
 

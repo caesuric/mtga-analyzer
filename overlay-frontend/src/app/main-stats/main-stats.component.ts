@@ -22,4 +22,11 @@ export class MainStatsComponent implements OnInit {
     return inputNumber.toFixed(2);
   }
 
+  formatTime(inputMinutes: number): string {
+    let hours = Math.floor(inputMinutes / 60);
+    let minutes = Math.floor(inputMinutes - (hours * 60));
+    if (hours > 0) return hours.toString() + 'h ' + minutes.toString() + 'm';
+    else return minutes.toString() + 'm';
+  }
+
 }

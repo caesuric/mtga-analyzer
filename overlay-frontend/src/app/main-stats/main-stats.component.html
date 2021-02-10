@@ -2,17 +2,30 @@
     Stats not yet loaded.
 </div>
 <div *ngIf="!!data">
-    <div>
+    <div class="stat">
         At rank {{data.rank}}, tier {{data.tier}}, subtier {{data.subtier}}
     </div>
-    <div>
+    <div class="stat">
         Using deck {{data.deck}}
     </div>
-    <div>
-        Win percent {{formatNumber(data.winPercent * 100)}}%
+    <div class="stat">
+        Played this deck for {{formatTime(data.deckTimePlayed)}}
     </div>
-    <div>
-        Played this deck for {{formatNumber(data.deckTimePlayed)}} minutes
+    <div class="stat">
+        Average game time {{formatTime(data.deckTimePlayed / (data.winsWithDeck + data.lossesWithDeck))}}
+    </div>
+    <div class="stat">
+        Deck record {{data.winsWithDeck}} - {{data.lossesWithDeck}} ({{formatNumber(100 * data.winsWithDeck / (data.winsWithDeck + data.lossesWithDeck))}}%)
+    </div>
+    <hr />
+    <div class="stat">
+        Time played overall {{formatTime(data.overallTime)}}
+    </div>
+    <div class="stat">
+        Average overall game time {{formatTime(data.overallTime / (data.overallWins + data.overallLosses))}}
+    </div>
+    <div class="stat">
+        Overall record {{data.overallWins}} - {{data.overallLosses}} ({{formatNumber(100 * data.overallWins / (data.overallWins + data.overallLosses))}}%)
     </div>
     <div class="sim-table">
         <div class="sim-header sim-row">

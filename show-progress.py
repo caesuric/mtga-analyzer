@@ -5,6 +5,7 @@ import sys
 import time
 import threading
 import hashlib
+import socket
 import tornado.websocket
 import tornado.web
 import tornado.ioloop
@@ -33,12 +34,17 @@ def main():
     parse_logs(log_data, log_path, log_path2)
     time1 = get_time(str(log_path))
     time2 = get_time(str(log_path2))
-    # app = create_main_window(log_data)
     launch_main_loop(time1, time2, log_path, log_path2, log_data)
-    # app.mainloop()
     run_server()
 
 def run_server():
+    a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    location = ("127.0.0.1", 19019)
+    result_of_check = a_socket.connect_ex(location)
+    if result_of_check != 0:
+        sys.exit()
+    a_socket.close()
+
     application = tornado.web.Application([
         (r"/socket", SocketHandler)
     ])
@@ -85,6 +91,11 @@ def update_frontend(log_data):
                 'deck': log_data.decks[match_stats['most_recent_deck']],
                 'winPercent': match_stats['win_percent'],
                 'deckTimePlayed': match_stats['time'] / 60 / 10000000,
+                'winsWithDeck': match_stats['wins'],
+                'lossesWithDeck': match_stats['losses'],
+                'overallWins': match_stats['overallWins'],
+                'overallLosses': match_stats['overallLosses'],
+                'overallTime': match_stats['overallTime'] / 60 / 10000000,
                 'simTable': table
             }
         })
@@ -167,8 +178,13 @@ def show_results(log_data):
     print(match_stats['time'] / 60 / 10000000, 'minutes')
 
 def get_match_stats(log_data):
-    output = {'wins': 0, 'losses': 0, 'time': 0, 'most_recent_deck': log_data.matches[-1]['deck']}
+    output = {'overallWins': 0, 'overallLosses': 0, 'overallTime': 0, 'wins': 0, 'losses': 0, 'time': 0, 'most_recent_deck': log_data.matches[-1]['deck']}
     for match in log_data.matches:
+        if match['won']:
+            output['overallWins'] += 1
+        else:
+            output['overallLosses'] += 1
+        output['overallTime'] += int(match['end']) - int(match['start'])
         if match['deck'] == output['most_recent_deck'] and match['won']:
             output['wins'] += 1
             output['time'] += int(match['end']) - int(match['start'])
