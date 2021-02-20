@@ -38,12 +38,12 @@ def main():
     run_server()
 
 def run_server():
-    a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    location = ("127.0.0.1", 19019)
-    result_of_check = a_socket.connect_ex(location)
-    if result_of_check != 0:
-        sys.exit()
-    a_socket.close()
+    # a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # location = ("127.0.0.1", 19019)
+    # result_of_check = a_socket.connect_ex(location)
+    # if result_of_check != 0:
+    #     sys.exit()
+    # a_socket.close()
 
     application = tornado.web.Application([
         (r"/socket", SocketHandler)
@@ -96,7 +96,11 @@ def update_frontend(log_data):
                 'overallWins': match_stats['overallWins'],
                 'overallLosses': match_stats['overallLosses'],
                 'overallTime': match_stats['overallTime'] / 60 / 10000000,
-                'simTable': table
+                'simTable': table,
+                'mythicPercentileChange': match_stats['mythicPercentileChange'],
+                'mythicRankChange': match_stats['mythicRankChange'],
+                'mythicPercentile': match_stats['mythicPercentile'],
+                'mythicRank': match_stats['mythicRank']
             }
         })
     )
@@ -178,20 +182,36 @@ def show_results(log_data):
     print(match_stats['time'] / 60 / 10000000, 'minutes')
 
 def get_match_stats(log_data):
-    output = {'overallWins': 0, 'overallLosses': 0, 'overallTime': 0, 'wins': 0, 'losses': 0, 'time': 0, 'most_recent_deck': log_data.matches[-1]['deck']}
+    output = {'overallWins': 0, 'overallLosses': 0, 'overallTime': 0, 'wins': 0, 'losses': 0, 'time': 0, 'most_recent_deck': log_data.matches[-1]['deck'], 'mythicPercentileChange': 0, 'mythicRankChange': 0, 'mythicPercentile': 0, 'mythicRank': 0}
+    mythic_percentile_relevant_games = 0
+    mythic_rank_relevant_games = 0
+    if log_data.prev_mythic_percentile is not None:
+        output['mythicPercentile'] = log_data.prev_mythic_percentile
+    if log_data.prev_mythic_rank is not None:
+        output['mythicRank'] = log_data.prev_mythic_rank
     for match in log_data.matches:
         if match['won']:
             output['overallWins'] += 1
         else:
             output['overallLosses'] += 1
         output['overallTime'] += int(match['end']) - int(match['start'])
+        if match['deck'] == output['most_recent_deck']:
+            output['time'] += int(match['end']) - int(match['start'])
+            if 'mythicPercentileChange' in match:
+                output['mythicPercentileChange'] += match['mythicPercentileChange']
+                mythic_percentile_relevant_games += 1
+            if 'mythicRankChange' in match:
+                output['mythicRankChange'] += match['mythicRankChange']
+                mythic_rank_relevant_games += 1
         if match['deck'] == output['most_recent_deck'] and match['won']:
             output['wins'] += 1
-            output['time'] += int(match['end']) - int(match['start'])
         elif match['deck'] == output['most_recent_deck']:
             output['losses'] += 1
-            output['time'] += int(match['end']) - int(match['start'])
     output['win_percent'] = output['wins'] / (output['wins'] + output['losses'])
+    if mythic_percentile_relevant_games > 0:
+        output['mythicPercentileChange'] /= mythic_percentile_relevant_games
+    if mythic_rank_relevant_games > 0:
+        output['mythicRankChange'] /= mythic_rank_relevant_games
     return output
 
 def run_sims(rank_detail, winrate, game_time):
@@ -227,6 +247,8 @@ class LogData():
         self.rank_detail = {}
         self.deck_ids = {}
         self.current_match = {}
+        self.prev_mythic_percentile = None
+        self.prev_mythic_rank = None
         self.player_name = ''
         self.deck_list_string = ''
         self.rank_detail_string = ''
@@ -236,7 +258,7 @@ class LogData():
         self.handler_table = {
             '[Accounts - Client] Successfully logged in to account: ': self.handle_login,
             'Deck.GetDeckListsV3': self.handle_get_deck_list,
-            'Event.GetCombinedRankInfo': self.handle_get_rank_info,
+            '<== Event.GetCombinedRankInfo': self.handle_get_rank_info,
             '<== Deck.CreateDeckV3': self.handle_create_deck,
             '<== Deck.UpdateDeckV3': self.handle_update_deck,
             '[UnityCrossThreadLogger]<== Event.DeckSubmitV3 ': self.handle_deck_submit,
@@ -280,6 +302,22 @@ class LogData():
 
     def handle_get_rank_info(self, logfile, line):
         self.rank_detail_string = line
+        self.rank_detail = get_rank_detail(self.rank_detail_string)
+        if self.prev_mythic_percentile is not None and self.current_match is not None:
+            self.current_match['mythicPercentileChange'] = self.rank_detail['mythicPercentile'] - self.prev_mythic_percentile
+        if self.prev_mythic_rank is not None and self.current_match is not None:
+            self.current_match['mythicRankChange'] = self.rank_detail['mythicRank'] - self.prev_mythic_rank
+        self.update_match_with_mythic_changes()
+        self.prev_mythic_percentile = self.rank_detail['mythicPercentile']
+        self.prev_mythic_rank = self.rank_detail['mythicRank']
+
+    def update_match_with_mythic_changes(self):
+        for match in self.matches:
+            if match['id'] == self.current_match['id']:
+                if 'mythicPercentileChange' not in match and 'mythicPercentileChange' in self.current_match:
+                    match['mythicPercentileChange'] = self.current_match['mythicPercentileChange']
+                if 'mythicRankChange' not in match and 'mythicRankChange' in self.current_match:
+                    match['mythicRankChange'] = self.current_match['mythicRankChange']
 
     def handle_create_deck(self, logfile, line):
         create_deck_obj = json.loads(line.replace('[UnityCrossThreadLogger]<== Deck.CreateDeckV3 ', '').strip())['payload']
@@ -377,7 +415,9 @@ def get_rank_detail(rank_detail_string):
     return {
         'rank': rank_detail_obj['constructedClass'],
         'tier': rank_detail_obj['constructedLevel'],
-        'subtier': rank_detail_obj['constructedStep']
+        'subtier': rank_detail_obj['constructedStep'],
+        'mythicPercentile': rank_detail_obj['constructedPercentile'],
+        'mythicRank': rank_detail_obj['constructedLeaderboardPlace']
     }
 
 def show_rank(winrate, rank, tier, subtier, time):

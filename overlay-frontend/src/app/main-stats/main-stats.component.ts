@@ -29,4 +29,31 @@ export class MainStatsComponent implements OnInit {
     else return minutes.toString() + 'm';
   }
 
+  gamesToMythicNumbers(): number {
+    let gap = 100 - this.data.mythicPercentile;
+    let changePerGame = this.data.mythicPercentileChange;
+    let games = gap / changePerGame;
+    if (games <= 0 ) games = 0;
+    return games;
+  }
+
+  timeToMythicNumbers(): string {
+    let games = this.gamesToMythicNumbers();
+    let timePerGame = this.data.deckTimePlayed / (this.data.winsWithDeck + this.data.lossesWithDeck);
+    return this.formatTime(timePerGame * games);
+  }
+
+  gamesToSpecificMythicNumber(rank: number): number {
+    let gap = rank - this.data.mythicRank;
+    let changePerGame = this.data.mythicRankChange;
+    let games = gap / changePerGame;
+    if (games <= 0) games = 0;
+    return games;
+  }
+
+  timeToSpecificMythicNumber(rank: number): string {
+    let games = this.gamesToSpecificMythicNumber(rank);
+    let timePerGame = this.data.deckTimePlayed / (this.data.winsWithDeck + this.data.lossesWithDeck);
+    return this.formatTime(timePerGame * games);
+  }
 }

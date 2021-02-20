@@ -1,7 +1,7 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const child_process = require('child_process');
-let childProcessStarted = false;
+// let childProcessStarted = false;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -9,8 +9,8 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 }
 
 const createWindow = () => {
-  if (!childProcessStarted) child_process.exec(path.join('dist', 'overlay-backend.exe'));
-  childProcessStarted = true;
+  // if (!childProcessStarted) child_process.exec(path.join('dist', 'overlay-backend.exe'));
+  // childProcessStarted = true;
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     x: 0,

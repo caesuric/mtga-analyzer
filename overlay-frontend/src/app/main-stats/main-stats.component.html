@@ -27,7 +27,7 @@
     <div class="stat">
         Overall record {{data.overallWins}} - {{data.overallLosses}} ({{formatNumber(100 * data.overallWins / (data.overallWins + data.overallLosses))}}%)
     </div>
-    <div class="sim-table">
+    <div class="sim-table" *ngIf="data.simTable.length > 0">
         <div class="sim-header sim-row">
             <div class="sim-column">
                 To Rank
@@ -43,6 +43,49 @@
             <div class="sim-column" [innerHtml]="row[0]"></div>
             <div class="sim-column" [innerHtml]="formatNumber(row[1])"></div>
             <div class="sim-column" [innerHtml]="formatNumber(row[2])"></div>
+        </div>
+    </div>
+    <div class="sim-table" *ngIf="data.mythicPercentileChange !== 0 || data.mythicRankChange !== 0">
+        <div class="sim-header sim-row">
+            <div class="sim-column">
+                To
+            </div>
+            <div class="sim-column">
+                Games
+            </div>
+            <div class="sim-column">
+                Hours
+            </div>
+        </div>
+        <div class="sim-row" *ngIf="data.mythicPercentileChange !== 0 && gamesToMythicNumbers() > 0">
+            <div class="sim-column" [innerHtml]="'Mythic #1500'"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(gamesToMythicNumbers())"></div>
+            <div class="sim-column" [innerHtml]="timeToMythicNumbers()"></div>
+        </div>
+        <div class="sim-row" *ngIf="data.mythicRankChange !== 0 && gamesToMythicNumbers() == 0">
+            <div class="sim-column" [innerHtml]="'Mythic #1000'"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(gamesToSpecificMythicNumber(1000))"></div>
+            <div class="sim-column" [innerHtml]="timeToSpecificMythicNumber(1000)"></div>
+        </div>
+        <div class="sim-row" *ngIf="data.mythicRankChange !== 0 && gamesToMythicNumbers() == 0">
+            <div class="sim-column" [innerHtml]="'Mythic #750'"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(gamesToSpecificMythicNumber(750))"></div>
+            <div class="sim-column" [innerHtml]="timeToSpecificMythicNumber(750)"></div>
+        </div>
+        <div class="sim-row" *ngIf="data.mythicRankChange !== 0 && gamesToMythicNumbers() == 0">
+            <div class="sim-column" [innerHtml]="'Mythic #500'"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(gamesToSpecificMythicNumber(500))"></div>
+            <div class="sim-column" [innerHtml]="timeToSpecificMythicNumber(500)"></div>
+        </div>
+        <div class="sim-row" *ngIf="data.mythicRankChange !== 0 && gamesToMythicNumbers() == 0">
+            <div class="sim-column" [innerHtml]="'Mythic #250'"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(gamesToSpecificMythicNumber(250))"></div>
+            <div class="sim-column" [innerHtml]="timeToSpecificMythicNumber(250)"></div>
+        </div>
+        <div class="sim-row" *ngIf="data.mythicRankChange !== 0 && gamesToMythicNumbers() == 0">
+            <div class="sim-column" [innerHtml]="'Mythic #1'"></div>
+            <div class="sim-column" [innerHtml]="formatNumber(gamesToSpecificMythicNumber(1))"></div>
+            <div class="sim-column" [innerHtml]="timeToSpecificMythicNumber(1)"></div>
         </div>
     </div>
 </div>
