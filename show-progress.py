@@ -255,6 +255,8 @@ class LogData():
         self.selected_deck = ''
         self.team_id = 0
         self.parsing_match = False
+        self.end_flag1 = False
+        self.end_flag2 = False
         self.handler_table = {
             '[Accounts - Client] Successfully logged in to account: ': self.handle_login,
             'Deck.GetDeckListsV3': self.handle_get_deck_list,
@@ -312,9 +314,11 @@ class LogData():
         self.prev_mythic_rank = self.rank_detail['mythicRank']
 
     def update_match_with_mythic_changes(self):
+        if 'won' not in self.current_match or self.current_match['won'] is None:
+            return
         for match in self.matches:
             if match['id'] == self.current_match['id']:
-                if 'mythicPercentileChange' not in match and 'mythicPercentileChange' in self.current_match:
+                if 'mythicPercentileChange' in self.current_match:
                     match['mythicPercentileChange'] = self.current_match['mythicPercentileChange']
                 if 'mythicRankChange' not in match and 'mythicRankChange' in self.current_match:
                     match['mythicRankChange'] = self.current_match['mythicRankChange']
@@ -336,6 +340,8 @@ class LogData():
     def handle_match_created(self, logfile, line):
         self.current_match = {'won': None, 'deck': self.selected_deck}
         self.parsing_match = True
+        self.end_flag1 = False
+        self.end_flag2 = False
 
     def handle_state_changed_event(self, logfile, line):
         line = logfile.readline()
@@ -356,6 +362,8 @@ class LogData():
         for result in result_list:
             if result['scope'] == 'MatchScope_Game' and result['result'] == 'ResultType_WinLoss':
                 self.current_match['won'] = self.team_id == result['winningTeamId']
+                self.end_flag2 = True
+                self.end_parsing_match(None)
 
     def handle_gre_to_client_event(self, logfile, line):
         line = logfile.readline()
@@ -366,12 +374,15 @@ class LogData():
             self.current_match['start'] = client_event['timestamp']
         for entry in client_event['greToClientEvent']['greToClientMessages']:
             if 'start' in self.current_match and entry['type'] == 'GREMessageType_GameStateMessage' and 'gameInfo' in entry['gameStateMessage'] and 'stage' in entry['gameStateMessage']['gameInfo'] and entry['gameStateMessage']['gameInfo']['stage'] == 'GameStage_GameOver' and not self.match_already_parsed():
+                self.end_flag1 = True
                 self.end_parsing_match(client_event)
 
     def end_parsing_match(self, client_event):
-        self.current_match['end'] = client_event['timestamp']
-        self.matches.append(self.current_match)
-        self.parsing_match = False
+        if client_event is not None:
+            self.current_match['end'] = client_event['timestamp']
+        if self.end_flag1 and self.end_flag2:
+            self.matches.append(self.current_match)
+            self.parsing_match = False
     
     def match_already_parsed(self):
         for match in self.matches:
